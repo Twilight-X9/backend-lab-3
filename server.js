@@ -39,7 +39,38 @@ async function initializeDBAndServer() {
 
 app.get(['/books', '/books/'], async (req, res) => {
   try {
-    const books = await db.all('SELECT * FROM book');
+    const {
+      search_q = '',
+      order_by = 'id',
+      order = 'ASC',
+      limit = 10,
+      offset = 0
+    } = req.query;
+
+    const allowedOrderBy = ['id', 'title', 'author', 'price', 'pages'];
+    const safeOrderBy = allowedOrderBy.includes(order_by) ? order_by : 'id';
+    const safeOrder = String(order).toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+
+    const safeLimit = parseInt(limit, 10) > 0 ? parseInt(limit, 10) : 10;
+    const safeOffset = parseInt(offset, 10) >= 0 ? parseInt(offset, 10) : 0;
+
+    let conditions = [];
+    let params = [];
+
+    if (search_q && String(search_q).trim() !== '') {
+      conditions.push('title LIKE ?');
+      params.push(%%);
+    }
+
+    let whereClause = '';
+    if (conditions.length > 0) {
+      whereClause = ' WHERE ' + conditions.join(' AND ');
+    }
+
+    const query = SELECT * FROM book ORDER BY   LIMIT ? OFFSET ?;
+    params.push(safeLimit, safeOffset);
+
+    const books = await db.all(query, params);
     res.status(200).json(books);
   } catch (error) {
     res.status(500).json({ message: 'Internal Server Error' });
