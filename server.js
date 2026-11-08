@@ -18,7 +18,7 @@ async function initializeDBAndServer() {
       driver: sqlite3.Database
     });
 
-    await db.exec(
+    await db.exec(`
       CREATE TABLE IF NOT EXISTS book (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title TEXT NOT NULL,
@@ -26,13 +26,13 @@ async function initializeDBAndServer() {
         price REAL NOT NULL,
         pages INTEGER NOT NULL
       );
-    );
+    `);
 
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(Server running at http://localhost:/);
+      console.log(`Server running at http://localhost:${PORT}/`);
     });
   } catch (error) {
-    console.error(Database connection error: );
+    console.error(`Database connection error: ${error.message}`);
     process.exit(1);
   }
 }
@@ -61,7 +61,7 @@ app.get(['/books', '/books/'], async (req, res) => {
 
     if (search_q && String(search_q).trim() !== '') {
       conditions.push('title LIKE ?');
-      params.push(%%);
+      params.push(`%${String(search_q).trim()}%`);
     }
 
     if (min_price !== undefined && max_price !== undefined && min_price !== '' && max_price !== '') {
@@ -83,11 +83,26 @@ app.get(['/books', '/books/'], async (req, res) => {
       whereClause = ' WHERE ' + conditions.join(' AND ');
     }
 
-    const query = SELECT * FROM book ORDER BY   LIMIT ? OFFSET ?;
+    const query = `SELECT * FROM book${whereClause} ORDER BY ${safeOrderBy} ${safeOrder} LIMIT ? OFFSET ?`;
     params.push(safeLimit, safeOffset);
 
     const books = await db.all(query, params);
     res.status(200).json(books);
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.get(['/books/:bookId', '/books/:bookId/'], async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const book = await db.get('SELECT * FROM book WHERE id = ?', [bookId]);
+
+    if (!book) {
+      return res.status(404).json({ message: `Book with id ${bookId} not found` });
+    }
+
+    res.status(200).json(book);
   } catch (error) {
     res.status(500).json({ message: 'Internal Server Error' });
   }
@@ -124,6 +139,65 @@ app.post(['/books', '/books/'], async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Internal Server Error' });
   }
+});
+
+app.put(['/books/:bookId', '/books/:bookId/'], async (req, res) => {
+  try {
+    const { bookId } = req.params;
+    const { title, author, price, pages } = req.body;
+
+    const existingBook = await db.get('SELECT * FROM book WHERE id = ?', [bookId]);
+    if (!existingBook) {
+      return res.status(404).json({ message: `Book with id ${bookId} not found` });
+    }
+
+    if (title === undefined && author === undefined && price === undefined && pages === undefined) {
+      return res.status(400).json({ message: 'At least one field must be provided to update' });
+    }
+
+    if (price !== undefined && (price === '' || isNaN(Number(price)))) {
+      return res.status(400).json({ message: 'Price must be a valid number' });
+    }
+
+    if (pages !== undefined && (pages === '' || isNaN(Number(pages)))) {
+      return res.status(400).json({ message: 'Pages must be a valid number' });
+    }
+
+    const updatedTitle = title !== undefined ? title : existingBook.title;
+    const updatedAuthor = author !== undefined ? author : existingBook.author;
+    const updatedPrice = price !== undefined ? Number(price) : existingBook.price;
+    const updatedPages = pages !== undefined ? Number(pages) : existingBook.pages;
+
+    await db.run(
+      'UPDATE book SET title = ?, author = ?, price = ?, pages = ? WHERE id = ?',
+      [updatedTitle, updatedAuthor, updatedPrice, updatedPages, bookId]
+    );
+
+    res.status(200).json({ message: 'Book updated successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.delete(['/books/:bookId', '/books/:bookId/'], async (req, res) => {
+  try {
+    const { bookId } = req.params;
+
+    const existingBook = await db.get('SELECT * FROM book WHERE id = ?', [bookId]);
+    if (!existingBook) {
+      return res.status(404).json({ message: `Book with id ${bookId} not found` });
+    }
+
+    await db.run('DELETE FROM book WHERE id = ?', [bookId]);
+
+    res.status(200).json({ message: 'Book deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
+app.use((req, res) => {
+  res.status(404).json({ message: `Cannot ${req.method} ${req.originalUrl}` });
 });
 
 initializeDBAndServer();
