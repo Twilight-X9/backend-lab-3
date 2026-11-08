@@ -1,0 +1,339 @@
+{
+  "info": {
+    "_postman_id": "b3e94a81-d142-4f8e-9081-3fcfcb891a32",
+    "name": "Backend Lab 3 - REST API and Validation",
+    "description": "Postman test suite for Lab 3 covering REST endpoints, query parameters, search, sorting, filtering, validation, and status codes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "Query Parameters & Filtering",
+      "item": [
+        {
+          "name": "1. GET All Books (Default)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books",
+              "host": ["{{base_url}}"],
+              "path": ["books"]
+            }
+          }
+        },
+        {
+          "name": "2. GET Search by Title (search_q=JavaScript)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books?search_q=JavaScript",
+              "host": ["{{base_url}}"],
+              "path": ["books"],
+              "query": [
+                {
+                  "key": "search_q",
+                  "value": "JavaScript"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "3. GET Sort by Price Descending (order_by=price&order=DESC)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books?order_by=price&order=DESC",
+              "host": ["{{base_url}}"],
+              "path": ["books"],
+              "query": [
+                {
+                  "key": "order_by",
+                  "value": "price"
+                },
+                {
+                  "key": "order",
+                  "value": "DESC"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "4. GET Pagination (limit=3&offset=0)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books?limit=3&offset=0",
+              "host": ["{{base_url}}"],
+              "path": ["books"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "3"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "5. GET Price Range Filter (min_price=300&max_price=500)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books?min_price=300&max_price=500",
+              "host": ["{{base_url}}"],
+              "path": ["books"],
+              "query": [
+                {
+                  "key": "min_price",
+                  "value": "300"
+                },
+                {
+                  "key": "max_price",
+                  "value": "500"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "6. GET Combined Search and Sort",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books?search_q=Code&order_by=price&order=ASC",
+              "host": ["{{base_url}}"],
+              "path": ["books"],
+              "query": [
+                {
+                  "key": "search_q",
+                  "value": "Code"
+                },
+                {
+                  "key": "order_by",
+                  "value": "price"
+                },
+                {
+                  "key": "order",
+                  "value": "ASC"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CRUD Success Cases",
+      "item": [
+        {
+          "name": "7. GET Single Book by ID (200 OK)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books/1",
+              "host": ["{{base_url}}"],
+              "path": ["books", "1"]
+            }
+          }
+        },
+        {
+          "name": "8. POST Create Book (201 Created)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"You Don't Know JS: ES6 & Beyond\",\n  \"author\": \"Kyle Simpson\",\n  \"price\": 350,\n  \"pages\": 275\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/books",
+              "host": ["{{base_url}}"],
+              "path": ["books"]
+            }
+          }
+        },
+        {
+          "name": "9. PUT Update Book (200 OK)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 480\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/books/1",
+              "host": ["{{base_url}}"],
+              "path": ["books", "1"]
+            }
+          }
+        },
+        {
+          "name": "10. DELETE Book by ID (200 OK)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books/10",
+              "host": ["{{base_url}}"],
+              "path": ["books", "10"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Failure & Validation Cases",
+      "item": [
+        {
+          "name": "11. GET Book Not Found (404 Not Found)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books/9999",
+              "host": ["{{base_url}}"],
+              "path": ["books", "9999"]
+            }
+          }
+        },
+        {
+          "name": "12. POST Missing Title (400 Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"author\": \"Martin Fowler\",\n  \"price\": 450\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/books",
+              "host": ["{{base_url}}"],
+              "path": ["books"]
+            }
+          }
+        },
+        {
+          "name": "13. POST Missing Author (400 Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Architecture Patterns\",\n  \"price\": 550\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/books",
+              "host": ["{{base_url}}"],
+              "path": ["books"]
+            }
+          }
+        },
+        {
+          "name": "14. POST Non-numeric Price (400 Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Clean Architecture\",\n  \"author\": \"Robert C. Martin\",\n  \"price\": \"five hundred\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/books",
+              "host": ["{{base_url}}"],
+              "path": ["books"]
+            }
+          }
+        },
+        {
+          "name": "15. PUT Book Not Found (404 Not Found)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"price\": 500\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/books/9999",
+              "host": ["{{base_url}}"],
+              "path": ["books", "9999"]
+            }
+          }
+        },
+        {
+          "name": "16. DELETE Book Not Found (404 Not Found)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/books/9999",
+              "host": ["{{base_url}}"],
+              "path": ["books", "9999"]
+            }
+          }
+        },
+        {
+          "name": "17. Undefined Route (404 Not Found)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/nonexistent",
+              "host": ["{{base_url}}"],
+              "path": ["nonexistent"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
