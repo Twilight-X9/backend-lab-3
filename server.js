@@ -44,7 +44,9 @@ app.get(['/books', '/books/'], async (req, res) => {
       order_by = 'id',
       order = 'ASC',
       limit = 10,
-      offset = 0
+      offset = 0,
+      min_price,
+      max_price
     } = req.query;
 
     const allowedOrderBy = ['id', 'title', 'author', 'price', 'pages'];
@@ -60,6 +62,20 @@ app.get(['/books', '/books/'], async (req, res) => {
     if (search_q && String(search_q).trim() !== '') {
       conditions.push('title LIKE ?');
       params.push(%%);
+    }
+
+    if (min_price !== undefined && max_price !== undefined && min_price !== '' && max_price !== '') {
+      conditions.push('price BETWEEN ? AND ?');
+      params.push(Number(min_price), Number(max_price));
+    } else {
+      if (min_price !== undefined && min_price !== '') {
+        conditions.push('price >= ?');
+        params.push(Number(min_price));
+      }
+      if (max_price !== undefined && max_price !== '') {
+        conditions.push('price <= ?');
+        params.push(Number(max_price));
+      }
     }
 
     let whereClause = '';
