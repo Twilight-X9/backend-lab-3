@@ -93,4 +93,37 @@ app.get(['/books', '/books/'], async (req, res) => {
   }
 });
 
+app.post(['/books', '/books/'], async (req, res) => {
+  try {
+    const { title, author, price, pages } = req.body;
+
+    if (!title || typeof title !== 'string' || title.trim() === '') {
+      return res.status(400).json({ message: 'Title is required' });
+    }
+
+    if (!author || typeof author !== 'string' || author.trim() === '') {
+      return res.status(400).json({ message: 'Author is required' });
+    }
+
+    if (price === undefined || price === null || price === '' || isNaN(Number(price))) {
+      return res.status(400).json({ message: 'Price must be a valid number' });
+    }
+
+    const parsedPrice = Number(price);
+    const parsedPages = (pages !== undefined && pages !== null && pages !== '' && !isNaN(Number(pages))) ? Number(pages) : 0;
+
+    const result = await db.run(
+      'INSERT INTO book (title, author, price, pages) VALUES (?, ?, ?, ?)',
+      [title.trim(), author.trim(), parsedPrice, parsedPages]
+    );
+
+    res.status(201).json({
+      message: 'Book created successfully',
+      bookId: result.lastID
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Internal Server Error' });
+  }
+});
+
 initializeDBAndServer();
